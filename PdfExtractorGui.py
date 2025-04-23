@@ -27,7 +27,7 @@ def extract_data_from_pdf_bytes(pdf_bytes):
     }
 
     for i, line in enumerate(lines):
-        ref_match = re.search(r"Ref\s+(\d{3}-\d+)", line)
+        ref_match = re.search(r"Ref\s+(\d{3,4}-\d+)", line)
         if ref_match:
             data["Número Ref"] = ref_match.group(1)
             candidates = [lines[i + j].strip() for j in range(-2, 3) if 0 <= i + j < len(lines)]
@@ -46,7 +46,7 @@ def extract_data_from_pdf_bytes(pdf_bytes):
         "Desc. Modalidad": r"Desc.*?Modalidad\s+(.*?)\n",
         "Idioma": r"Idioma\s+([A-Z]{2,3})",
         "Horario": r"Horario\s+(\d{2}:\d{2})",
-        "Hotel": r"hotel está vd\. alojado.*?-\s*(.*?)(\n|$)"
+        "Hotel": r"(?:hotel está vd\. alojado|Please advise the name of your hotel)\s*-\s*(.*?)(\n|$)"
     }
 
     for key, pattern in patterns.items():
