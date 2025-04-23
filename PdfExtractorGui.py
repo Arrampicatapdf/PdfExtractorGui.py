@@ -10,6 +10,10 @@ def extract_data_from_pdf_bytes(pdf_bytes):
         text = "".join([page.get_text() for page in doc])
         lines = text.splitlines()
 
+    # Eliminar sección de OBSERVACIONES para evitar interferencias
+    if "OBSERVACIONES" in text:
+        text = text.split("OBSERVACIONES")[0]
+
     data = {
         "Tipo de Reserva": "NUEVA RESERVA" if "NUEVA RESERVA" in text else "",
         "Número Ref": "",
@@ -46,7 +50,7 @@ def extract_data_from_pdf_bytes(pdf_bytes):
         "Desc. Modalidad": r"Desc.*?Modalidad\s*[:\-]?\s*(.*?)\s*(\n|Idioma|$)",
         "Idioma": r"Idioma\s+([A-Z]{2,3})",
         "Horario": r"Horario\s+(\d{2}:\d{2})",
-        "Hotel": r"(?:hotel est[áa] vd\. alojado|Please advise the name of your hotel|hotel)\s*[-:]\s*(.*?)(\n|$)"
+        "Hotel": r"(?:hotel est[áa] vd\. alojado|Please advise the name of your hotel|en qué hotel está|hotel)\s*[-:]\s*(.*?)(\n|$)"
     }
 
     for key, pattern in patterns.items():
