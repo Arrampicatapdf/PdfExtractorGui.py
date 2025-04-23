@@ -10,10 +10,7 @@ def extract_data_from_pdf_bytes(pdf_bytes):
         text = "".join([page.get_text() for page in doc])
         lines = text.splitlines()
 
-    if "OBSERVACIONES" in text:
-        text_pre_obs = text.split("OBSERVACIONES")[0]
-    else:
-        text_pre_obs = text
+    text_pre_obs = text.split("OBSERVACIONES")[0] if "OBSERVACIONES" in text else text
 
     data = {
         "Tipo de Reserva": "NUEVA RESERVA" if "NUEVA RESERVA" in text else "",
@@ -58,21 +55,19 @@ def extract_data_from_pdf_bytes(pdf_bytes):
         if match:
             data[key] = match.group(1).strip()
 
-    # Extraer hotel priorizando frases específicas
     hotel = ""
-    hotel_patterns = [
+    for pattern in [
         r"indique en qué hotel está(?:\s*vd\.)?\s*alojado\s*[-:]?\s*(.*?)\s*(\n|$)",
         r"vd\.\s*alojado\s*[-:]?\s*(.*?)\s*(\n|$)",
         r"please advise the name of your hotel\s*[-:]?\s*(.*?)\s*(\n|$)"
-    ]
-    for pattern in hotel_patterns:
+    ]:
         match = re.search(pattern, text, re.IGNORECASE)
         if match:
             hotel = match.group(1).strip(" :-•.")
             break
 
     if not hotel:
-        for line in reversed(lines[-4:]):
+        for line in reversed(lines[-6:]):
             if "hotel" in line.lower():
                 after = line.lower().split("hotel")[-1].strip(" :-•.\n")
                 if len(after) > 2:
