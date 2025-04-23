@@ -41,16 +41,16 @@ def extract_data_from_pdf_bytes(pdf_bytes):
         "Total Pasajeros": r"Total pasajeros\s+(.+?)\n",
         "Fecha Servicio": r"Fecha Servicio\s+(\d{2}-[A-Z]{3}\.-\d{2})",
         "Servicio": r"Servicio\s+([A-Z0-9]+)",
-        "Desc. Servicio": r"Desc\\. Servicio\s+(.+?)\n",
+        "Desc. Servicio": r"Desc.*?Servicio\s+(.*?)\n",
         "Modalidad": r"Modalidad\s+([A-Z0-9]+)",
-        "Desc. Modalidad": r"Desc\\. Modalidad\s+(.+?)\n",
+        "Desc. Modalidad": r"Desc.*?Modalidad\s+(.*?)\n",
         "Idioma": r"Idioma\s+([A-Z]{2,3})",
         "Horario": r"Horario\s+(\d{2}:\d{2})",
-        "Hotel": r"hotel está vd\\. alojado\\.\\s*-\\s*(.*?)\n"
+        "Hotel": r"hotel está vd\. alojado.*?-\s*(.*?)(\n|$)"
     }
 
     for key, pattern in patterns.items():
-        match = re.search(pattern, text)
+        match = re.search(pattern, text, re.IGNORECASE)
         if match:
             data[key] = match.group(1).strip()
 
