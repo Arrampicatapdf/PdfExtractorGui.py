@@ -10,8 +10,6 @@ def extract_data_from_pdf_bytes(pdf_bytes):
         text = "".join([page.get_text() for page in doc])
         lines = text.splitlines()
 
-    text_pre_obs = text.split("OBSERVACIONES")[0] if "OBSERVACIONES" in text else text
-
     data = {
         "Tipo de Reserva": "NUEVA RESERVA" if "NUEVA RESERVA" in text else "",
         "Número Ref": "",
@@ -29,52 +27,32 @@ def extract_data_from_pdf_bytes(pdf_bytes):
     }
 
     for i, line in enumerate(lines):
-        ref_match = re.search(r"Ref\s+(\d{3,4}-\d+)", line)
+        ref_match = re.search(r"Ref\s+(\d{3}-\d+)", line)
         if ref_match:
             data["Número Ref"] = ref_match.group(1)
             candidates = [lines[i + j].strip() for j in range(-2, 3) if 0 <= i + j < len(lines)]
-            full_name = [p.strip() for p in candidates if re.fullmatch(r"[A-ZÁÉÍÓÚÑa-z\s]{5,}", p) and "ARRAMPICATA" not in p and "NUEVA" not in p and "CANCELACIÓN" not in p]
+            full_name = [p.strip() for p in candidates if re.fullmatch(r"[A-ZÁÉÍÓÚÑ\s]{5,}", p) and "ARRAMPICATA" not in p and "NUEVA" not in p]
             if full_name:
                 data["Nombre Cliente"] = " ".join(full_name)
             break
 
     patterns = {
-        "Fecha Creación": r"Fecha creación\s*[:\-]?\s*(\d{2}-[A-Z]{3}\.?-\d{2})",
-        "Total Pasajeros": r"Total pasajeros\s*[:\-]?\s*(\d+)",
-        "Fecha Servicio": r"Fecha Servicio\s*[:\-]?\s*(\d{2}-[A-Z]{3}\.?-\d{2})",
-        "Servicio": r"Servicio\s*[:\-]?\s*([A-Z0-9\- ]{3,})",
-        "Desc. Servicio": r"Desc.*?Servicio\s*[:\-]?\s*(.*?)\s*(\n|Modalidad|Idioma|$)",
-        "Modalidad": r"Modalidad\s*[:\-]?\s*([A-Z0-9]+)",
-        "Desc. Modalidad": r"Desc.*?Modalidad\s*[:\-]?\s*(.*?)\s*(\n|Idioma|$)",
-        "Idioma": r"Idioma\s*[:\-]?\s*([A-Z]{2,3})",
-        "Horario": r"Horario\s*[:\-]?\s*(\d{2}:\d{2})"
+        "Fecha Creación": r"Fecha creación\s+(\d{2}-[A-Z]{3}\.-\d{2})",
+        "Total Pasajeros": r"Total pasajeros\s+(.+?)\n",
+        "Fecha Servicio": r"Fecha Servicio\s+(\d{2}-[A-Z]{3}\.-\d{2})",
+        "Servicio": r"Servicio\s+([A-Z0-9]+)",
+        "Desc. Servicio": r"Desc.*?Servicio\s+(.*?)\n",
+        "Modalidad": r"Modalidad\s+([A-Z0-9]+)",
+        "Desc. Modalidad": r"Desc.*?Modalidad\s+(.*?)\n",
+        "Idioma": r"Idioma\s+([A-Z]{2,3})",
+        "Horario": r"Horario\s+(\d{2}:\d{2})",
+        "Hotel": r"hotel está vd\. alojado.*?-\s*(.*?)(\n|$)"
     }
 
     for key, pattern in patterns.items():
-        match = re.search(pattern, text_pre_obs, re.IGNORECASE)
-        if match:
-            data[key] = match.group(1).strip()
-
-    hotel = ""
-    for pattern in [
-        r"indique en qué hotel está(?:\s*vd\.)?\s*alojado\s*[-:]?\s*(.*?)\s*(\n|$)",
-        r"vd\.?\s*alojado\s*[-:]?\s*(.*?)\s*(\n|$)",
-        r"please advise the name of your hotel\s*[-:]?\s*(.*?)\s*(\n|$)"
-    ]:
         match = re.search(pattern, text, re.IGNORECASE)
         if match:
-            hotel = match.group(1).strip(" :-•.")
-            break
-
-    if not hotel:
-        for line in reversed(lines[-6:]):
-            if "hotel" in line.lower():
-                after = line.lower().split("hotel")[-1].strip(" :-•.\n")
-                if len(after) > 2:
-                    hotel = after.title()
-                    break
-
-    data["Hotel"] = hotel
+            data[key] = match.group(1).strip()
 
     edad_lines, capture = [], False
     for line in lines:
@@ -119,3 +97,4 @@ if uploaded_files:
         st.download_button("📥 Descargar CSV", open(tmp_file.name, "rb"), file_name="datos_extraidos.csv")
     else:
         st.warning("No se pudieron extraer datos de los archivos cargados.")
+
