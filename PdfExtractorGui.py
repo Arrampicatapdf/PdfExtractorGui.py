@@ -39,15 +39,15 @@ def extract_data_from_pdf_bytes(pdf_bytes):
             break
 
     patterns = {
-        "Fecha Creación": r"Fecha creación\s+(\d{2}-[A-Z]{3}\.-\d{2})",
-        "Total Pasajeros": r"Total pasajeros\s+(.+?)\n",
-        "Fecha Servicio": r"Fecha Servicio\s+(\d{2}-[A-Z]{3}\.-\d{2})",
-        "Servicio": r"Servicio\s+([A-Z0-9\- ]{3,})",
+        "Fecha Creación": r"Fecha creación\s*[:\-]?\s*(\d{2}-[A-Z]{3}\.?-\d{2})",
+        "Total Pasajeros": r"Total pasajeros\s*[:\-]?\s*(\d+)",
+        "Fecha Servicio": r"Fecha Servicio\s*[:\-]?\s*(\d{2}-[A-Z]{3}\.?-\d{2})",
+        "Servicio": r"Servicio\s*[:\-]?\s*([A-Z0-9\- ]{3,})",
         "Desc. Servicio": r"Desc.*?Servicio\s*[:\-]?\s*(.*?)\s*(\n|Modalidad|Idioma|$)",
-        "Modalidad": r"Modalidad\s+([A-Z0-9]+)",
+        "Modalidad": r"Modalidad\s*[:\-]?\s*([A-Z0-9]+)",
         "Desc. Modalidad": r"Desc.*?Modalidad\s*[:\-]?\s*(.*?)\s*(\n|Idioma|$)",
-        "Idioma": r"Idioma\s+([A-Z]{2,3})",
-        "Horario": r"Horario\s+(\d{2}:\d{2})"
+        "Idioma": r"Idioma\s*[:\-]?\s*([A-Z]{2,3})",
+        "Horario": r"Horario\s*[:\-]?\s*(\d{2}:\d{2})"
     }
 
     for key, pattern in patterns.items():
@@ -58,7 +58,7 @@ def extract_data_from_pdf_bytes(pdf_bytes):
     hotel = ""
     for pattern in [
         r"indique en qué hotel está(?:\s*vd\.)?\s*alojado\s*[-:]?\s*(.*?)\s*(\n|$)",
-        r"vd\.\s*alojado\s*[-:]?\s*(.*?)\s*(\n|$)",
+        r"vd\.?\s*alojado\s*[-:]?\s*(.*?)\s*(\n|$)",
         r"please advise the name of your hotel\s*[-:]?\s*(.*?)\s*(\n|$)"
     ]:
         match = re.search(pattern, text, re.IGNORECASE)
