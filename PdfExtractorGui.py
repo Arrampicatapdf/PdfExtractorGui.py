@@ -46,7 +46,7 @@ def extract_data_from_pdf_bytes(pdf_bytes):
         "Desc. Modalidad": r"Desc.*?Modalidad\s*[:\-]?\s*(.*?)\s*(\n|Idioma|$)",
         "Idioma": r"Idioma\s+([A-Z]{2,3})",
         "Horario": r"Horario\s+(\d{2}:\d{2})",
-        "Hotel": r"(?:hotel est[áa] vd\. alojado|Please advise the name of your hotel)\s*-\s*(.*?)(\n|$)"
+        "Hotel": r"(?:hotel est[áa] vd\. alojado|Please advise the name of your hotel|hotel)\s*[-:]\s*(.*?)(\n|$)"
     }
 
     for key, pattern in patterns.items():
