@@ -10,9 +10,10 @@ def extract_data_from_pdf_bytes(pdf_bytes):
         text = "".join([page.get_text() for page in doc])
         lines = text.splitlines()
 
-    # Eliminar sección de OBSERVACIONES para evitar interferencias
     if "OBSERVACIONES" in text:
-        text = text.split("OBSERVACIONES")[0]
+        text_pre_obs = text.split("OBSERVACIONES")[0]
+    else:
+        text_pre_obs = text
 
     data = {
         "Tipo de Reserva": "NUEVA RESERVA" if "NUEVA RESERVA" in text else "",
@@ -53,18 +54,32 @@ def extract_data_from_pdf_bytes(pdf_bytes):
     }
 
     for key, pattern in patterns.items():
-        match = re.search(pattern, text, re.IGNORECASE)
+        match = re.search(pattern, text_pre_obs, re.IGNORECASE)
         if match:
             data[key] = match.group(1).strip()
 
-    # Buscar el nombre del hotel: extraer todo lo que venga después de la palabra "hotel"
-    for line in lines:
-        match = re.search(r"hotel.*?\s+(.*)$", line, re.IGNORECASE)
+    # Extraer hotel priorizando frases específicas
+    hotel = ""
+    hotel_patterns = [
+        r"indique en qué hotel está(?:\s*vd\.)?\s*alojado\s*[-:]?\s*(.*?)\s*(\n|$)",
+        r"vd\.\s*alojado\s*[-:]?\s*(.*?)\s*(\n|$)",
+        r"please advise the name of your hotel\s*[-:]?\s*(.*?)\s*(\n|$)"
+    ]
+    for pattern in hotel_patterns:
+        match = re.search(pattern, text, re.IGNORECASE)
         if match:
-            hotel_name = match.group(1).strip()
-            if len(hotel_name) > 3:
-                data["Hotel"] = hotel_name
-                break
+            hotel = match.group(1).strip(" :-•.")
+            break
+
+    if not hotel:
+        for line in reversed(lines[-4:]):
+            if "hotel" in line.lower():
+                after = line.lower().split("hotel")[-1].strip(" :-•.\n")
+                if len(after) > 2:
+                    hotel = after.title()
+                    break
+
+    data["Hotel"] = hotel
 
     edad_lines, capture = [], False
     for line in lines:
