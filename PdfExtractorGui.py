@@ -46,7 +46,6 @@ def extract_data_from_pdf_bytes(pdf_bytes):
     patterns = {
         "Fecha Creación": r"Fecha creación\s*[:\-\)]?\s*(\d{2}-[A-Z]{3,4}\.?-\d{2})",
         "Fecha Servicio": r"Fecha Servicio\s*[:\-\)]?\s*(\d{2}-[A-Z]{3,4}\.?-\d{2})",
-        "Servicio": r"Servicio\s*[:\-\)]?\s*([A-Z0-9]{6,})",
         "Desc. Servicio": r"Desc.*?Servicio\s*[:\-\)]?\s*(.*?)\s*(\n|Modalidad|Idioma|$)",
         "Modalidad": r"Modalidad\s*[:\-\)]?\s*([A-Z0-9]+)",
         "Desc. Modalidad": r"Desc.*?Modalidad\s*[:\-\)]?\s*(.*?)\s*(\n|Idioma|$)",
@@ -58,6 +57,14 @@ def extract_data_from_pdf_bytes(pdf_bytes):
         match = re.search(pattern, text, re.IGNORECASE)
         if match:
             data[key] = match.group(1).strip()
+
+    # Servicio: buscar línea específica
+    for line in lines:
+        if line.strip().startswith("Servicio"):
+            service_match = re.search(r"Servicio\s*[:\-\)]?\s*([A-Z0-9]{6,})", line)
+            if service_match:
+                data["Servicio"] = service_match.group(1).strip()
+            break
 
     hotel = ""
     for pattern in [
