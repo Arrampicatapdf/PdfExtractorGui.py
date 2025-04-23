@@ -44,9 +44,9 @@ def extract_data_from_pdf_bytes(pdf_bytes):
             break
 
     patterns = {
-        "Fecha Creación": r"Fecha creación\s*[:\-\)]?\s*(\d{2}-[A-Z]{3,4}\.?-\d{2})",
-        "Fecha Servicio": r"Fecha Servicio\s*[:\-\)]?\s*(\d{2}-[A-Z]{3,4}\.?-\d{2})",
-        "Servicio": r"Servicio\s*[:\-\)]?\s*([A-Z]{3,}[A-Z0-9]*)",
+        "Fecha Creación": r"Fecha creación\s*[:\-\)]?\s*(\d{2}-[A-Z]{3,4}\.\-\d{2})",
+        "Fecha Servicio": r"Fecha Servicio\s*[:\-\)]?\s*(\d{2}-[A-Z]{3,4}\.\-\d{2})",
+        "Servicio": r"Servicio\s*[:\-\)]?\s*([A-Z0-9]{6,})",
         "Desc. Servicio": r"Desc.*?Servicio\s*[:\-\)]?\s*(.*?)\s*(\n|Modalidad|Idioma|$)",
         "Modalidad": r"Modalidad\s*[:\-\)]?\s*([A-Z0-9]+)",
         "Desc. Modalidad": r"Desc.*?Modalidad\s*[:\-\)]?\s*(.*?)\s*(\n|Idioma|$)",
@@ -99,7 +99,7 @@ def extract_data_from_pdf_bytes(pdf_bytes):
 # Streamlit UI
 st.set_page_config(page_title="Extractor de PDFs", layout="centered")
 st.title("📄 Extractor de datos desde PDFs")
-st.write("Sube uno o varios archivos PDF para extraer los datos - Arrampicata")
+st.write("Sube uno o varios archivos PDF para extraer los datos")
 
 uploaded_files = st.file_uploader("Subir archivos PDF", type="pdf", accept_multiple_files=True)
 
