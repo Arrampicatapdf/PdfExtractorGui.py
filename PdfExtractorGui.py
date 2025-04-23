@@ -44,8 +44,8 @@ def extract_data_from_pdf_bytes(pdf_bytes):
             break
 
     patterns = {
-        "Fecha Creación": r"Fecha creación\s*[:\-]?\s*(\d{2}-[A-Z]{3}\.?-\d{2})",
-        "Fecha Servicio": r"Fecha Servicio\s*[:\-]?\s*(\d{2}-[A-Z]{3}\.?-\d{2})",
+        "Fecha Creación": r"Fecha creación\s*[:\-]?\s*(\d{2}-[A-Z]{3,4}\.?-\d{2})",
+        "Fecha Servicio": r"Fecha Servicio\s*[:\-]?\s*(\d{2}-[A-Z]{3,4}\.?-\d{2})",
         "Servicio": r"Servicio\s*[:\-]?\s*([A-Z0-9\- ]{3,})",
         "Desc. Servicio": r"Desc.*?Servicio\s*[:\-]?\s*(.*?)\s*(\n|Modalidad|Idioma|$)",
         "Modalidad": r"Modalidad\s*[:\-]?\s*([A-Z0-9]+)",
