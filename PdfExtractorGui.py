@@ -36,9 +36,15 @@ def extract_data_from_pdf_bytes(pdf_bytes):
                 data["Nombre Cliente"] = " ".join(full_name)
             break
 
+    for i, line in enumerate(lines):
+        if "Total pasajeros" in line:
+            match = re.search(r"Total pasajeros\s*[:\-]?\s*([0-9A-Za-z\s\(\)\+]+)", line)
+            if match:
+                data["Total Pasajeros"] = match.group(1).strip()
+            break
+
     patterns = {
         "Fecha Creación": r"Fecha creación\s*[:\-]?\s*(\d{2}-[A-Z]{3}\.?-\d{2})",
-        "Total Pasajeros": r"Total pasajeros\s*[:\-]?\s*([\w\s\(\)\+]+)",
         "Fecha Servicio": r"Fecha Servicio\s*[:\-]?\s*(\d{2}-[A-Z]{3}\.?-\d{2})",
         "Servicio": r"Servicio\s*[:\-]?\s*([A-Z0-9\- ]{3,})",
         "Desc. Servicio": r"Desc.*?Servicio\s*[:\-]?\s*(.*?)\s*(\n|Modalidad|Idioma|$)",
