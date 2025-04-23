@@ -49,14 +49,22 @@ def extract_data_from_pdf_bytes(pdf_bytes):
         "Modalidad": r"Modalidad\s+([A-Z0-9]+)",
         "Desc. Modalidad": r"Desc.*?Modalidad\s*[:\-]?\s*(.*?)\s*(\n|Idioma|$)",
         "Idioma": r"Idioma\s+([A-Z]{2,3})",
-        "Horario": r"Horario\s+(\d{2}:\d{2})",
-        "Hotel": r"(?:hotel est[áa] vd\. alojado|Please advise the name of your hotel|en qué hotel está|hotel)\s*[-:]\s*(.*?)(\n|$)"
+        "Horario": r"Horario\s+(\d{2}:\d{2})"
     }
 
     for key, pattern in patterns.items():
         match = re.search(pattern, text, re.IGNORECASE)
         if match:
             data[key] = match.group(1).strip()
+
+    # Buscar el nombre del hotel: extraer todo lo que venga después de la palabra "hotel"
+    for line in lines:
+        match = re.search(r"hotel.*?\s+(.*)$", line, re.IGNORECASE)
+        if match:
+            hotel_name = match.group(1).strip()
+            if len(hotel_name) > 3:
+                data["Hotel"] = hotel_name
+                break
 
     edad_lines, capture = [], False
     for line in lines:
