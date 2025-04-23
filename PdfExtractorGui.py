@@ -5,10 +5,10 @@ import pandas as pd
 import streamlit as st
 from tempfile import NamedTemporaryFile
 
-def extract_data_from_pdf(pdf_path):
-    doc = fitz.open(pdf_path)
-    text = "".join([page.get_text() for page in doc])
-    lines = text.splitlines()
+def extract_data_from_pdf_bytes(pdf_bytes):
+    with fitz.open(stream=pdf_bytes.read(), filetype="pdf") as doc:
+        text = "".join([page.get_text() for page in doc])
+        lines = text.splitlines()
 
     data = {
         "Tipo de Reserva": "NUEVA RESERVA" if "NUEVA RESERVA" in text else "",
@@ -41,12 +41,12 @@ def extract_data_from_pdf(pdf_path):
         "Total Pasajeros": r"Total pasajeros\s+(.+?)\n",
         "Fecha Servicio": r"Fecha Servicio\s+(\d{2}-[A-Z]{3}\.-\d{2})",
         "Servicio": r"Servicio\s+([A-Z0-9]+)",
-        "Desc. Servicio": r"Desc\. Servicio\s+(.+?)\n",
+        "Desc. Servicio": r"Desc\\. Servicio\s+(.+?)\n",
         "Modalidad": r"Modalidad\s+([A-Z0-9]+)",
-        "Desc. Modalidad": r"Desc\. Modalidad\s+(.+?)\n",
+        "Desc. Modalidad": r"Desc\\. Modalidad\s+(.+?)\n",
         "Idioma": r"Idioma\s+([A-Z]{2,3})",
         "Horario": r"Horario\s+(\d{2}:\d{2})",
-        "Hotel": r"hotel está vd\. alojado\.\s*-\s*(.*?)\n"
+        "Hotel": r"hotel está vd\\. alojado\\.\\s*-\\s*(.*?)\n"
     }
 
     for key, pattern in patterns.items():
@@ -70,38 +70,30 @@ def extract_data_from_pdf(pdf_path):
 
     return data
 
-def process_all_pdfs(folder_path):
-    data_list = []
-    for file in os.listdir(folder_path):
-        if file.lower().endswith(".pdf"):
-            full_path = os.path.join(folder_path, file)
-            try:
-                data = extract_data_from_pdf(full_path)
-                data_list.append(data)
-            except Exception as e:
-                st.error(f"Error procesando {file}: {e}")
-
-    return pd.DataFrame(data_list)
-
 # Streamlit UI
 st.set_page_config(page_title="Extractor de PDFs", layout="centered")
 st.title("📄 Extractor de datos desde PDFs")
-st.write("Selecciona una carpeta para extraer los datos de todos los PDFs")
+st.write("Sube uno o varios archivos PDF para extraer los datos")
 
-folder_path = st.text_input("Ruta completa de la carpeta:", "")
-if folder_path:
-    if os.path.isdir(folder_path):
-        if st.button("Procesar PDFs"):
-            with st.spinner("Procesando PDFs..."):
-                df = process_all_pdfs(folder_path)
-                if not df.empty:
-                    st.success("Proceso completado correctamente.")
-                    st.dataframe(df)
+uploaded_files = st.file_uploader("Subir archivos PDF", type="pdf", accept_multiple_files=True)
 
-                    tmp_file = NamedTemporaryFile(delete=False, suffix=".csv")
-                    df.to_csv(tmp_file.name, index=False, encoding='utf-8-sig')
-                    st.download_button("📥 Descargar CSV", open(tmp_file.name, "rb"), file_name="datos_extraidos.csv")
-                else:
-                    st.warning("No se encontraron PDFs válidos en la carpeta.")
+if uploaded_files:
+    data_list = []
+    with st.spinner("Procesando PDFs..."):
+        for uploaded_file in uploaded_files:
+            try:
+                data = extract_data_from_pdf_bytes(uploaded_file)
+                data_list.append(data)
+            except Exception as e:
+                st.error(f"Error procesando {uploaded_file.name}: {e}")
+
+    if data_list:
+        df = pd.DataFrame(data_list)
+        st.success("Proceso completado correctamente.")
+        st.dataframe(df)
+
+        tmp_file = NamedTemporaryFile(delete=False, suffix=".csv")
+        df.to_csv(tmp_file.name, index=False, encoding='utf-8-sig')
+        st.download_button("📥 Descargar CSV", open(tmp_file.name, "rb"), file_name="datos_extraidos.csv")
     else:
-        st.error("La ruta ingresada no es válida.")
+        st.warning("No se pudieron extraer datos de los archivos cargados.")
