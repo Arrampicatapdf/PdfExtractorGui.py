@@ -31,7 +31,7 @@ def extract_data_from_pdf_bytes(pdf_bytes):
         if ref_match:
             data["Número Ref"] = ref_match.group(1)
             candidates = [lines[i + j].strip() for j in range(-2, 3) if 0 <= i + j < len(lines)]
-            full_name = [p.strip() for p in candidates if re.fullmatch(r"[A-ZÁÉÍÓÚÑ\s]{5,}", p) and "ARRAMPICATA" not in p and "NUEVA" not in p]
+            full_name = [p.strip() for p in candidates if re.fullmatch(r"[A-ZÁÉÍÓÚÑa-z\s]{5,}", p) and "ARRAMPICATA" not in p and "NUEVA" not in p and "CANCELACIÓN" not in p]
             if full_name:
                 data["Nombre Cliente"] = " ".join(full_name)
             break
@@ -40,13 +40,13 @@ def extract_data_from_pdf_bytes(pdf_bytes):
         "Fecha Creación": r"Fecha creación\s+(\d{2}-[A-Z]{3}\.-\d{2})",
         "Total Pasajeros": r"Total pasajeros\s+(.+?)\n",
         "Fecha Servicio": r"Fecha Servicio\s+(\d{2}-[A-Z]{3}\.-\d{2})",
-        "Servicio": r"Servicio\s+([A-Z0-9]+)",
-        "Desc. Servicio": r"Desc.*?Servicio\s+(.*?)\n",
+        "Servicio": r"Servicio\s+([A-Z0-9\- ]{3,})",
+        "Desc. Servicio": r"Desc.*?Servicio\s*[:\-]?\s*(.*?)\s*(\n|Modalidad|Idioma|$)",
         "Modalidad": r"Modalidad\s+([A-Z0-9]+)",
-        "Desc. Modalidad": r"Desc.*?Modalidad\s+(.*?)\n",
+        "Desc. Modalidad": r"Desc.*?Modalidad\s*[:\-]?\s*(.*?)\s*(\n|Idioma|$)",
         "Idioma": r"Idioma\s+([A-Z]{2,3})",
         "Horario": r"Horario\s+(\d{2}:\d{2})",
-        "Hotel": r"(?:hotel está vd\. alojado|Please advise the name of your hotel)\s*-\s*(.*?)(\n|$)"
+        "Hotel": r"(?:hotel est[áa] vd\. alojado|Please advise the name of your hotel)\s*-\s*(.*?)(\n|$)"
     }
 
     for key, pattern in patterns.items():
