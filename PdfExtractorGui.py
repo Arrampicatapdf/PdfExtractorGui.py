@@ -38,20 +38,20 @@ def extract_data_from_pdf_bytes(pdf_bytes):
 
     for i, line in enumerate(lines):
         if "Total pasajeros" in line:
-            match = re.search(r"Total pasajeros\s*[:\-]?\s*([0-9A-Za-z\s\(\)\+]+)", line)
+            match = re.search(r"Total pasajeros\s*[:\-\)]?\s*(\d+\s*Pax.*?)$", line)
             if match:
                 data["Total Pasajeros"] = match.group(1).strip()
             break
 
     patterns = {
-        "Fecha Creación": r"Fecha creación\s*[:\-]?\s*(\d{2}-[A-Z]{3,4}\.?-\d{2})",
-        "Fecha Servicio": r"Fecha Servicio\s*[:\-]?\s*(\d{2}-[A-Z]{3,4}\.?-\d{2})",
-        "Servicio": r"Servicio\s*[:\-]?\s*([A-Z0-9\- ]{3,})",
-        "Desc. Servicio": r"Desc.*?Servicio\s*[:\-]?\s*(.*?)\s*(\n|Modalidad|Idioma|$)",
-        "Modalidad": r"Modalidad\s*[:\-]?\s*([A-Z0-9]+)",
-        "Desc. Modalidad": r"Desc.*?Modalidad\s*[:\-]?\s*(.*?)\s*(\n|Idioma|$)",
-        "Idioma": r"Idioma\s*[:\-]?\s*([A-Z]{2,3})",
-        "Horario": r"Horario\s*[:\-]?\s*(\d{2}:\d{2})"
+        "Fecha Creación": r"Fecha creación\s*[:\-\)]?\s*(\d{2}-[A-Z]{3,4}\.?-\d{2})",
+        "Fecha Servicio": r"Fecha Servicio\s*[:\-\)]?\s*(\d{2}-[A-Z]{3,4}\.?-\d{2})",
+        "Servicio": r"Servicio\s*[:\-\)]?\s*([A-Z0-9\- ]{3,})",
+        "Desc. Servicio": r"Desc.*?Servicio\s*[:\-\)]?\s*(.*?)\s*(\n|Modalidad|Idioma|$)",
+        "Modalidad": r"Modalidad\s*[:\-\)]?\s*([A-Z0-9]+)",
+        "Desc. Modalidad": r"Desc.*?Modalidad\s*[:\-\)]?\s*(.*?)\s*(\n|Idioma|$)",
+        "Idioma": r"Idioma\s*[:\-\)]?\s*([A-Z]{2,3})",
+        "Horario": r"Horario\s*[:\-\)]?\s*(\d{2}:\d{2})"
     }
 
     for key, pattern in patterns.items():
