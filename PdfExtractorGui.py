@@ -89,22 +89,21 @@ def extract_data_from_pdf_bytes(pdf_bytes):
     data["Hotel"] = hotel
 
     contacto = "No disponible"
-    joined_context = " ".join(lines).lower()
-    emergency_match = re.search(r"(?:incluido|incluyendo|including).*?(?:código internacional|international code|internacional)[^\d+]*([+]?\d[\d\s-]{6,})", joined_context, re.IGNORECASE)
-    if emergency_match:
-        number = emergency_match.group(1)
-        number = number.strip().replace(" ", "").replace("-", "")
-        if number.startswith("00"):
-            number = "+" + number[2:]
-        contacto = number
-    else:
-        fallback_match = re.search(r"(emergency|emergencia|emergência)[^\d+]*([+]?\d[\d\s-]{6,})", joined_context, re.IGNORECASE)
-        if fallback_match:
-            number = fallback_match.group(2)
-            number = number.strip().replace(" ", "").replace("-", "")
+    contact_patterns = [
+        r"(?:incluido|incluyendo|including).*?(?:código internacional|international code).*?([+\d][\d\s\-]{6,})",
+        r"(?:emergencia|emergency|emergência)[^\d]*(\+?\d[\d\s\-]{6,})"
+    ]
+
+    joined_text = " ".join(lines)
+    for pat in contact_patterns:
+        match = re.search(pat, joined_text, re.IGNORECASE)
+        if match:
+            number = match.group(1)
+            number = re.sub(r"[^\d+]", "", number)
             if number.startswith("00"):
                 number = "+" + number[2:]
             contacto = number
+            break
 
     data["Contacto"] = contacto
 
@@ -125,7 +124,7 @@ def extract_data_from_pdf_bytes(pdf_bytes):
     return data
 
 st.set_page_config(page_title="Extractor de PDFs", layout="centered")
-st.title("📄 Extractor de datos desde PDFs")
+st.title("Extractor de datos desde PDFs")
 st.write("Sube uno o varios archivos PDF para extraer los datos - Arrampicata")
 
 uploaded_files = st.file_uploader("Subir archivos PDF", type="pdf", accept_multiple_files=True)
@@ -147,6 +146,6 @@ if uploaded_files:
 
         tmp_file = NamedTemporaryFile(delete=False, suffix=".csv")
         df.to_csv(tmp_file.name, index=False, encoding='utf-8-sig')
-        st.download_button("📥 Descargar CSV", open(tmp_file.name, "rb"), file_name="datos_extraidos.csv")
+        st.download_button("Descargar CSV", open(tmp_file.name, "rb"), file_name="datos_extraidos.csv")
     else:
         st.warning("No se pudieron extraer datos de los archivos cargados.")
