@@ -24,7 +24,7 @@ def extract_data_from_pdf_bytes(pdf_bytes):
         "Idioma": "",
         "Horario": "",
         "Hotel": "",
-        "Contacto": "NO DISPONIBLE"
+        "Contacto": ""
     }
 
     for i, line in enumerate(lines):
@@ -88,18 +88,16 @@ def extract_data_from_pdf_bytes(pdf_bytes):
 
     data["Hotel"] = hotel
 
-    contact_pattern = re.compile(
-        r"(?:incluido|incluyendo|including)[^\n]*?(?:internacional|international)[^\n\d+]*(\+?\d[\d\s\-]{6,})",
-        re.IGNORECASE
-    )
-    for line in lines:
-        match = contact_pattern.search(line)
+    contacto = "NO DISPONIBLE"
+    joined_lines = " ".join(lines[-20:])
+    after_keywords = re.split(r"incluido|incluyendo|including.*?(internacional|international|emergencia|emergency|emergência)", joined_lines, flags=re.IGNORECASE)
+    if len(after_keywords) > 2:
+        possible_numbers = after_keywords[-1]
+        match = re.search(r"(\+\d{1,3})?[-\s]?(\d{6,13})", possible_numbers)
         if match:
-            number = match.group(1).replace(" ", "").replace("-", "")
-            if number.startswith("00"):
-                number = "+" + number[2:]
-            data["Contacto"] = number
-            break
+            contacto = (match.group(1) or "") + match.group(2)
+
+    data["Contacto"] = contacto
 
     edad_lines, capture = [], False
     for line in lines:
