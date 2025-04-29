@@ -102,7 +102,8 @@ def extract_data_from_pdf_bytes(pdf_bytes):
             number = re.sub(r"[^\d+]", "", number)
             if number.startswith("00"):
                 number = "+" + number[2:]
-            contacto = number
+            if number not in ["573017472300", "573214934899"]:
+                contacto = number
             break
 
     data["Contacto"] = contacto
