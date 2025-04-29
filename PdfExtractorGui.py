@@ -146,6 +146,6 @@ if uploaded_files:
 
         tmp_file = NamedTemporaryFile(delete=False, suffix=".csv")
         df.to_csv(tmp_file.name, index=False, encoding='utf-8-sig')
-        st.download_button("\ud83d\udce5 Descargar CSV", open(tmp_file.name, "rb"), file_name="datos_extraidos.csv")
+        st.download_button("Descargar CSV", open(tmp_file.name, "rb"), file_name="datos_extraidos.csv")
     else:
         st.warning("No se pudieron extraer datos de los archivos cargados.")
