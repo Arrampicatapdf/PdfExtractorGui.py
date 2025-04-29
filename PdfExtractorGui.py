@@ -89,18 +89,23 @@ def extract_data_from_pdf_bytes(pdf_bytes):
     data["Hotel"] = hotel
 
     contacto = ""
-    lines_joined = " ".join(lines[-10:])  # últimas líneas unidas
-    contacto_matches = re.findall(r"(?:(?:\+|00)?\d{2,3})?[\s\-]?(\d{6,13})", lines_joined)
-    if contacto_matches:
-        for match in contacto_matches[::-1]:
-            full_number = re.search(r"((?:\+|00)?\d{6,15})", lines_joined)
-            if full_number:
-                candidate = full_number.group(1)
-                if candidate not in ["+34971189230", "0034971189230"]:
-                    contacto = candidate
-                    break
+    contacto_found = False
+    for i in range(len(lines) - 1, max(-1, len(lines) - 15), -1):
+        combined_line = lines[i].strip() + " " + lines[i - 1].strip() if i > 0 else lines[i].strip()
+        match = re.search(r"(\+|00)?\d{6,15}", combined_line)
+        if match:
+            num = match.group(0)
+            if num not in ["+34971189230", "0034971189230"]:
+                data["Contacto"] = num
+                contacto_found = True
+                break
 
-    data["Contacto"] = contacto
+    if not contacto_found:
+        contact_matches = re.findall(r"(?:emergência|emergencia|emergency)[^\d]*(\+|00)?\d{6,15}", text, re.IGNORECASE)
+        for match in contact_matches:
+            if match not in ["+34971189230", "0034971189230"]:
+                data["Contacto"] = match
+                break
 
     edad_lines, capture = [], False
     for line in lines:
