@@ -69,6 +69,7 @@ def extract_data_from_pdf_bytes(pdf_bytes):
     hotel = ""
     for pattern in [
         r"indique en qué hotel está(?:\s*vd\.)?\s*alojado\s*[-:]?\s*(.*?)\s*(\n|$)",
+        r"por favor indique o hotel no qual está alojado\s*[-:]?\s*(.*?)\s*(\n|$)",
         r"vd\.?\s*alojado\s*[-:]?\s*(.*?)\s*(\n|$)",
         r"please advise the name of your hotel\s*[-:]?\s*(.*?)\s*(\n|$)"
     ]:
@@ -87,22 +88,17 @@ def extract_data_from_pdf_bytes(pdf_bytes):
 
     data["Hotel"] = hotel
 
-    # Extraer contacto telefónico internacional (ajustado para evitar falsos positivos)
     contacto = ""
-    contact_lines = [
-        line for line in lines if re.search(r"(código internacional|international code|telefone|emergencia)", line, re.IGNORECASE)
-    ]
-
-    for line in contact_lines:
-        contacto_match = re.search(r"\+(?!34971189230)(\d{8,15})", line)
-        if contacto_match:
-            contacto = "+" + contacto_match.group(1)
-            break
-
-    if not contacto:
-        matches = re.findall(r"\+(?!34971189230)(\d{8,15})", text)
-        if matches:
-            contacto = "+" + matches[-1]
+    lines_joined = " ".join(lines[-10:])  # últimas líneas unidas
+    contacto_matches = re.findall(r"(?:(?:\+|00)?\d{2,3})?[\s\-]?(\d{6,13})", lines_joined)
+    if contacto_matches:
+        for match in contacto_matches[::-1]:
+            full_number = re.search(r"((?:\+|00)?\d{6,15})", lines_joined)
+            if full_number:
+                candidate = full_number.group(1)
+                if candidate not in ["+34971189230", "0034971189230"]:
+                    contacto = candidate
+                    break
 
     data["Contacto"] = contacto
 
@@ -122,7 +118,6 @@ def extract_data_from_pdf_bytes(pdf_bytes):
 
     return data
 
-# Streamlit UI
 st.set_page_config(page_title="Extractor de PDFs", layout="centered")
 st.title("📄 Extractor de datos desde PDFs")
 st.write("Sube uno o varios archivos PDF para extraer los datos - Arrampicata")
