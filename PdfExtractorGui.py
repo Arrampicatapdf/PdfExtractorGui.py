@@ -23,7 +23,8 @@ def extract_data_from_pdf_bytes(pdf_bytes):
         "Desc. Modalidad": "",
         "Idioma": "",
         "Horario": "",
-        "Hotel": ""
+        "Hotel": "",
+        "Contacto": ""
     }
 
     for i, line in enumerate(lines):
@@ -58,7 +59,6 @@ def extract_data_from_pdf_bytes(pdf_bytes):
         if match:
             data[key] = match.group(1).strip()
 
-    # Servicio: buscar línea específica
     for line in lines:
         if line.strip().startswith("Servicio"):
             service_match = re.search(r"Servicio\s*[:\-\)]?\s*([A-Z0-9]{6,})", line)
@@ -86,6 +86,22 @@ def extract_data_from_pdf_bytes(pdf_bytes):
                     break
 
     data["Hotel"] = hotel
+
+    # Extraer contacto telefónico internacional
+    contacto = ""
+    for line in lines:
+        if any(key in line.lower() for key in ["emergencia", "international code", "incluido el código", "telefone"]):
+            contacto_match = re.search(r"\+(\d{8,15})", line)
+            if contacto_match:
+                contacto = "+" + contacto_match.group(1)
+                break
+
+    if not contacto:
+        matches = re.findall(r"\+(\d{8,15})", text)
+        if matches:
+            contacto = "+" + matches[-1]  # último número encontrado
+
+    data["Contacto"] = contacto
 
     edad_lines, capture = [], False
     for line in lines:
