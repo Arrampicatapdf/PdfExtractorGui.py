@@ -88,16 +88,29 @@ def extract_data_from_pdf_bytes(pdf_bytes):
 
     data["Hotel"] = hotel
 
-    contacto = ""
-    joined = " ".join(lines[-15:])
-    match = re.search(r"(?:incluido|incluyendo|including).*?(?:internacional|international).*?([+\d][\d\s\-]{6,})", joined, re.IGNORECASE)
+   # Extraer número de contacto cerca de frases clave
+contacto = ""
+joined = " ".join(lines[-20:])  # Ampliamos el rango para mayor contexto
+joined = re.sub(r"\s+", " ", joined)  # Reemplazamos múltiples espacios o saltos por uno solo
+
+# Buscar luego de "incluyendo código internacional" o similares
+patterns = [
+    r"(?:incluido|incluyendo|including).*?(?:internacional|international).*?(?:[-:\s])?\s*(\+?\d[\d\s\-]{6,})",
+    r"emergenc(?:ia|y|ia)\s*(?:[-:\s])?\s*(\+?\d[\d\s\-]{6,})",
+    r"\b(\+?\d{7,15})\b"  # Fallback: cualquier número largo válido
+]
+
+for pattern in patterns:
+    match = re.search(pattern, joined, re.IGNORECASE)
     if match:
-        number = match.group(1).strip().replace(" ", "").replace("-", "")
+        number = match.group(1)
+        number = re.sub(r"[^\d+]", "", number)  # limpiamos espacios y guiones
         if number.startswith("00"):
             number = "+" + number[2:]
         contacto = number
+        break
 
-    data["Contacto"] = contacto
+data["Contacto"] = contacto
 
     edad_lines, capture = [], False
     for line in lines:
