@@ -87,19 +87,22 @@ def extract_data_from_pdf_bytes(pdf_bytes):
 
     data["Hotel"] = hotel
 
-    # Extraer contacto telefónico internacional
+    # Extraer contacto telefónico internacional (ajustado para evitar falsos positivos)
     contacto = ""
-    for line in lines:
-        if any(key in line.lower() for key in ["emergencia", "international code", "incluido el código", "telefone"]):
-            contacto_match = re.search(r"\+(\d{8,15})", line)
-            if contacto_match:
-                contacto = "+" + contacto_match.group(1)
-                break
+    contact_lines = [
+        line for line in lines if re.search(r"(código internacional|international code|telefone|emergencia)", line, re.IGNORECASE)
+    ]
+
+    for line in contact_lines:
+        contacto_match = re.search(r"\+(?!34971189230)(\d{8,15})", line)
+        if contacto_match:
+            contacto = "+" + contacto_match.group(1)
+            break
 
     if not contacto:
-        matches = re.findall(r"\+(\d{8,15})", text)
+        matches = re.findall(r"\+(?!34971189230)(\d{8,15})", text)
         if matches:
-            contacto = "+" + matches[-1]  # último número encontrado
+            contacto = "+" + matches[-1]
 
     data["Contacto"] = contacto
 
