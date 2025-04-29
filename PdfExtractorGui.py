@@ -24,7 +24,7 @@ def extract_data_from_pdf_bytes(pdf_bytes):
         "Idioma": "",
         "Horario": "",
         "Hotel": "",
-        "Contacto": ""
+        "Contacto": "NO DISPONIBLE"
     }
 
     for i, line in enumerate(lines):
@@ -88,18 +88,22 @@ def extract_data_from_pdf_bytes(pdf_bytes):
 
     data["Hotel"] = hotel
 
-    contacto = ""
-    joined = " ".join(lines[-20:])
-    match = re.search(r"(?:incluido|incluyendo|including).*?(?:internacional|international).*?([+\d][\d\s\-]{6,})", joined, re.IGNORECASE)
-    if match:
-        number = match.group(1).strip().replace(" ", "").replace("-", "")
-        if number.startswith("00"):
-            number = "+" + number[2:]
-        elif number.startswith("+"):
-            number = number
-        else:
-            number = "+" + number
-        data["Contacto"] = number
+    contacto = "NO DISPONIBLE"
+    contact_patterns = [
+        r"Please provide a contact number.*?-\s*(\+?\d[\d\s\-]{6,})",
+        r"indique o número de telefone.*?-\s*(\+?\d[\d\s\-]{6,})"
+    ]
+
+    for pattern in contact_patterns:
+        match = re.search(pattern, text, re.IGNORECASE)
+        if match:
+            number = match.group(1).strip().replace(" ", "").replace("-", "")
+            if number.startswith("00"):
+                number = "+" + number[2:]
+            contacto = number
+            break
+
+    data["Contacto"] = contacto
 
     edad_lines, capture = [], False
     for line in lines:
@@ -118,7 +122,7 @@ def extract_data_from_pdf_bytes(pdf_bytes):
     return data
 
 st.set_page_config(page_title="Extractor de PDFs", layout="centered")
-st.title("📄 Extractor de datos desde PDFs")
+st.title("\ud83d\udcc4 Extractor de datos desde PDFs")
 st.write("Sube uno o varios archivos PDF para extraer los datos - Arrampicata")
 
 uploaded_files = st.file_uploader("Subir archivos PDF", type="pdf", accept_multiple_files=True)
@@ -140,6 +144,6 @@ if uploaded_files:
 
         tmp_file = NamedTemporaryFile(delete=False, suffix=".csv")
         df.to_csv(tmp_file.name, index=False, encoding='utf-8-sig')
-        st.download_button("📥 Descargar CSV", open(tmp_file.name, "rb"), file_name="datos_extraidos.csv")
+        st.download_button("\ud83d\udce5 Descargar CSV", open(tmp_file.name, "rb"), file_name="datos_extraidos.csv")
     else:
         st.warning("No se pudieron extraer datos de los archivos cargados.")
