@@ -89,26 +89,17 @@ def extract_data_from_pdf_bytes(pdf_bytes):
     data["Hotel"] = hotel
 
     contacto = ""
-    joined = " ".join(lines[-15:])
-    joined = re.sub(r"\s+", " ", joined)
-
-    patterns_contacto = [
-        r"(?:incluido|incluyendo|including).*?(?:internacional|international).*?(?:[-:\s])?\s*(\+?\d[\d\s\-]{6,})",
-        r"emergenc(?:ia|y|ia)\s*(?:[-:\s])?\s*(\+?\d[\d\s\-]{6,})",
-        r"\b(\+?\d{7,15})\b"
-    ]
-
-    for pattern in patterns_contacto:
-        match = re.search(pattern, joined, re.IGNORECASE)
-        if match:
-            number = match.group(1)
-            number = re.sub(r"[^\d+]", "", number)
-            if number.startswith("00"):
-                number = "+" + number[2:]
-            contacto = number
-            break
-
-    data["Contacto"] = contacto
+    joined = " ".join(lines[-20:])
+    match = re.search(r"(?:incluido|incluyendo|including).*?(?:internacional|international).*?([+\d][\d\s\-]{6,})", joined, re.IGNORECASE)
+    if match:
+        number = match.group(1).strip().replace(" ", "").replace("-", "")
+        if number.startswith("00"):
+            number = "+" + number[2:]
+        elif number.startswith("+"):
+            number = number
+        else:
+            number = "+" + number
+        data["Contacto"] = number
 
     edad_lines, capture = [], False
     for line in lines:
