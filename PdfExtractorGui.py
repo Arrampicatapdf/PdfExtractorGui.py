@@ -1,4 +1,4 @@
-import os
+""import os
 import re
 import fitz  # PyMuPDF
 import pandas as pd
@@ -89,16 +89,13 @@ def extract_data_from_pdf_bytes(pdf_bytes):
     data["Hotel"] = hotel
 
     contacto = ""
-    joined_text = " ".join(lines[-20:]).lower()
-    contact_contexts = ["emergencia", "emergency", "emergência", "incluyendo código internacional", "including international code"]
-
-    for ctx in contact_contexts:
-        if ctx in joined_text:
-            sub_text = joined_text.split(ctx)[-1]
-            match = re.search(r"(\+\d{1,3})?[\s\-]?(\d{6,14})", sub_text)
-            if match:
-                contacto = (match.group(1) or "") + match.group(2)
-                break
+    joined = " ".join(lines[-15:])
+    match = re.search(r"(?:incluido|incluyendo|including).*?(?:internacional|international).*?([+\d][\d\s\-]{6,})", joined, re.IGNORECASE)
+    if match:
+        number = match.group(1).strip().replace(" ", "").replace("-", "")
+        if number.startswith("00"):
+            number = "+" + number[2:]
+        contacto = number
 
     data["Contacto"] = contacto
 
