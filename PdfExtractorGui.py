@@ -89,21 +89,20 @@ def extract_data_from_pdf_bytes(pdf_bytes):
     data["Hotel"] = hotel
 
     contacto = ""
-    for i, line in enumerate(lines):
-        if any(kw in line.lower() for kw in ["emergencia", "emergency", "emergência"]):
-            for j in range(i, min(i+4, len(lines))):
-                number_match = re.search(r"(\+\d{7,15}|00\d{7,15}|\d{8,15})", lines[j])
-                if number_match:
-                    contacto = number_match.group(1)
-                    break
-        if "incluido o código internacional" in line.lower() or "including international code" in line.lower():
-            for j in range(i, min(i+4, len(lines))):
-                number_match = re.search(r"(\+\d{7,15}|00\d{7,15}|\d{8,15})", lines[j])
-                if number_match:
-                    contacto = number_match.group(1)
-                    break
-        if contacto:
-            break
+    contact_lines = []
+    found_contact_zone = False
+
+    for line in reversed(lines[-20:]):
+        if re.search(r"(emergenc[iy]a?|emergência|incluyendo código internacional)", line, re.IGNORECASE):
+            found_contact_zone = True
+        if found_contact_zone:
+            contact_lines.insert(0, line.strip())
+
+    if contact_lines:
+        combined_contact = " ".join(contact_lines)
+        match_contact = re.search(r"(\+\d{1,4})?[\s\-]?(\d{6,15})", combined_contact)
+        if match_contact:
+            contacto = match_contact.group(0).replace(" ", "").replace("-", "")
 
     data["Contacto"] = contacto
 
